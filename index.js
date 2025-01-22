@@ -13,6 +13,7 @@ app.use(cors());
 
 // Use the API key from the .env file
 const token = process.env.TELEGRAM_BOT_TOKEN;
+console.log('Telegram bot token:', token);
 
 // Create a bot instance
 const bot = new TelegramBot(token, { polling: true });
