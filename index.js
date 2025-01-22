@@ -1,7 +1,15 @@
+const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios'); // Import Axios for HTTP requests
-
+const cors = require('cors');
 require('dotenv').config(); // Load environment variables
+
+// Create an Express application
+const app = express();
+const port = 3000;
+
+// Enable CORS
+app.use(cors());
 
 // Use the API key from the .env file
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -60,7 +68,7 @@ bot.onText(/\/time/, (msg) => {
     bot.sendMessage(chatId, `The current server time is: ${currentTime}`);
 });
 
-// Handle the '/cat' command
+// Handle the '/cat' command to fetch a random cat fact
 bot.onText(/\/cat/, async (msg) => {
     const chatId = msg.chat.id;
     try {
@@ -73,7 +81,12 @@ bot.onText(/\/cat/, async (msg) => {
     }
 });
 
-// Handle any unknown commands
+// Handle the '/route' custom route in Express
+app.get('/', (req, res) => {
+    res.send('Hello!');
+});
+
+// Handle any unknown commands in the bot
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     if (!msg.text.startsWith('/')) return; // Ignore non-command messages
@@ -81,6 +94,11 @@ bot.on('message', (msg) => {
     if (!isKnownCommand) {
         bot.sendMessage(chatId, `Unknown command! Type /help to see the available commands.`);
     }
+});
+
+// Start the Express server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
 
 console.log('Telegram bot is running...');
