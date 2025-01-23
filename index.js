@@ -1,7 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios'); // Import Axios for HTTP requests
 require('dotenv').config(); // Load environment variables
-const express = require('express'); // Import Express
 
 // Use the Telegram bot token from the .env file
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -11,17 +10,6 @@ const bot = new TelegramBot(token, { polling: true });
 
 // Create an Express app
 const app = express();
-
-// Ping the server every minute
-const APP_URL = 'https://solubot-telegram.onrender.com/'; // Replace with your actual deployed URL
-setInterval(async () => {
-    try {
-        const response = await axios.get(APP_URL);
-        console.log(`Ping successful: ${response.status} ${response.statusText}`);
-    } catch (error) {
-        console.error(`Ping failed: ${error.message}`);
-    }
-}, 60 * 1000); // 1 minute interval
 
 // Available commands and their descriptions
 const commands = {
@@ -139,13 +127,4 @@ bot.on('message', (msg) => {
     }
 });
 
-// Set up a simple Express server for the / route
-app.get('/', (req, res) => {
-    res.send('Telegram bot is running...');
-});
-
-// Start the Express server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Express server is running on port ${PORT}`);
-});
+console.log('Bot is running...');
