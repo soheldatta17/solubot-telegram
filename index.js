@@ -1,21 +1,27 @@
-const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
-const cors = require('cors');
+const axios = require('axios'); // Import Axios for HTTP requests
 require('dotenv').config(); // Load environment variables
+const express = require('express'); // Import Express
 
-// Create an Express application
-const app = express();
-const port = 3000;
-
-// Enable CORS
-app.use(cors());
-
-// Use the API key from the .env file
+// Use the Telegram bot token from the .env file
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
-// Create a bot instance but do not poll for messages immediately
-const bot = new TelegramBot(token, { polling: false });
+// Create a bot instance
+const bot = new TelegramBot(token, { polling: true });
+
+// Create an Express app
+const app = express();
+
+// Ping the server every minute
+const APP_URL = 'https://solubot-telegram.onrender.com/'; // Replace with your actual deployed URL
+setInterval(async () => {
+    try {
+        const response = await axios.get(APP_URL);
+        console.log(`Ping successful: ${response.status} ${response.statusText}`);
+    } catch (error) {
+        console.error(`Ping failed: ${error.message}`);
+    }
+}, 60 * 1000); // 1 minute interval
 
 // Available commands and their descriptions
 const commands = {
@@ -24,7 +30,10 @@ const commands = {
     '/echo': 'Echo back the text you send (Usage: /echo YourText)',
     '/joke': 'Get a random joke',
     '/time': 'Get the current server time',
-    '/cat': 'Get a random cat fact'
+    '/cat': 'Get a random cat fact',
+    '/advice': 'Get random life advice',
+    '/trivia': 'Get a random trivia fact',
+    '/quote': 'Get an inspirational quote',
 };
 
 // Handle the '/start' command
@@ -55,7 +64,7 @@ bot.onText(/\/joke/, (msg) => {
     const jokes = [
         'Why don’t skeletons fight each other? They don’t have the guts!',
         'What do you call fake spaghetti? An impasta!',
-        'Why don’t scientists trust atoms? Because they make up everything!'
+        'Why don’t scientists trust atoms? Because they make up everything!',
     ];
     const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
     bot.sendMessage(chatId, randomJoke);
@@ -81,7 +90,46 @@ bot.onText(/\/cat/, async (msg) => {
     }
 });
 
-// Handle any unknown commands in the bot
+// Handle the '/advice' command to fetch random life advice
+bot.onText(/\/advice/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+        const response = await axios.get('https://api.adviceslip.com/advice');
+        const advice = response.data.slip.advice;
+        bot.sendMessage(chatId, `💡 Advice: ${advice}`);
+    } catch (error) {
+        console.error('Error fetching advice:', error.message);
+        bot.sendMessage(chatId, 'Sorry, I couldn’t fetch advice right now. Please try again later.');
+    }
+});
+
+// Handle the '/trivia' command to fetch a random trivia fact
+bot.onText(/\/trivia/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+        const response = await axios.get('https://uselessfacts.jsph.pl/random.json?language=en');
+        const trivia = response.data.text;
+        bot.sendMessage(chatId, `🧠 Trivia: ${trivia}`);
+    } catch (error) {
+        console.error('Error fetching trivia:', error.message);
+        bot.sendMessage(chatId, 'Sorry, I couldn’t fetch a trivia fact right now. Please try again later.');
+    }
+});
+
+// Handle the '/quote' command to fetch a random inspirational quote
+bot.onText(/\/quote/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+        const response = await axios.get('https://api.quotable.io/random');
+        const quote = `${response.data.content} — ${response.data.author}`;
+        bot.sendMessage(chatId, `📜 Quote: ${quote}`);
+    } catch (error) {
+        console.error('Error fetching quote:', error.message);
+        bot.sendMessage(chatId, 'Sorry, I couldn’t fetch a quote right now. Please try again later.');
+    }
+});
+
+// Handle unknown commands
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     if (!msg.text.startsWith('/')) return; // Ignore non-command messages
@@ -91,17 +139,13 @@ bot.on('message', (msg) => {
     }
 });
 
-// Define the route for '/'
+// Set up a simple Express server for the / route
 app.get('/', (req, res) => {
-    res.send('Hello! The bot is now triggered for messages in Telegram. Use the commands below.');
-
-    // When the `/` route is hit, start polling the Telegram bot for messages
-    bot.startPolling();
+    res.send('Telegram bot is running...');
 });
 
 // Start the Express server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Express server is running on port ${PORT}`);
 });
-
-console.log('Server and Telegram bot are running...');
