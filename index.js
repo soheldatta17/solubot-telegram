@@ -8,9 +8,6 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 // Create a bot instance
 const bot = new TelegramBot(token, { polling: true });
 
-// Create an Express app
-const app = express();
-
 // Available commands and their descriptions
 const commands = {
     '/start': 'Start the bot and get a welcome message',
